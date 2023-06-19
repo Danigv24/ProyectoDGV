@@ -23,12 +23,12 @@ public class Productos {
 	private String escuderia;
 	private int precio;
 	
-	private byte[] imagen;
+	private String imagen;
 	
 	@OneToOne()
 	@JoinColumn(name="productos")
 	private Rol rol;
-	public Productos(String nombreArticulo, String escuderia, int precio, byte[] imagen) {
+	public Productos(String nombreArticulo, String escuderia, int precio, String imagen) {
 		super();
 		this.nombreArticulo = nombreArticulo;
 		this.escuderia = escuderia;
@@ -50,7 +50,7 @@ public class Productos {
 	public int getPrecio() {
 		return precio;
 	}
-	public byte[] getImagen() {
+	public String getImagen() {
 		return imagen;
 	}
 	public void setId(Integer id) {
@@ -65,7 +65,7 @@ public class Productos {
 	public void setPrecio(int precio) {
 		this.precio = precio;
 	}
-	public void setImagen(byte[] imagen) {
+	public void setImagen(String imagen) {
 		this.imagen = imagen;
 	}
 	@Override

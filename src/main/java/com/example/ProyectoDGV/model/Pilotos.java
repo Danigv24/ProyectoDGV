@@ -29,6 +29,10 @@ public class Pilotos {
 		this.puntos = puntos;
 	}
 
+	public Pilotos() {
+		super();
+	}
+
 	public Integer getId() {
 		return Id;
 	}

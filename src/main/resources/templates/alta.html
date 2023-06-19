@@ -14,12 +14,16 @@
 		<div class="form">
 			<h3 style="tex-align: center;">Alta de usuarios</h3>
 			<form action="#" th:action="@{/alta}" th:object="${usuarioForm}" method="post">
-					<input type="text" placeholder="Username" th:field="*{userName}"/>
-					<input type="password" placeholder="Password" th:field="*{password}"/>
-					<input type="text" placeholder="Direccion" th:field="*{direccion}"/>
-					<input type="text" placeholder="CodigoPostal" th:field="*{codigopostal}"/>
-					<input type="submit" class="btn btn-primary"/>
-					<a href="/index" class="btn btn-primary">Volver</a>
+					<div>
+					<input type="text" placeholder="usuario" th:field="*{usuario}" required/>
+					<div th:text="${session.usuarioRepetido}">
+     				</div>	
+     				</div>			
+					<input type="password" placeholder="Password" th:field="*{password}" required/>
+					<input type="text" placeholder="Direccion" th:field="*{direccion}" required/>
+					<input type="text" placeholder="CodigoPostal" th:field="*{codigopostal}" required/>
+					<button type="submit" class="btn btn-primary"><span>Crear cuenta</span></button>
+					<a href="/login" class="btn btn-primary">Volver</a>
 	
 			</form>
 		</div>

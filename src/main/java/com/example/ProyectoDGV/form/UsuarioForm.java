@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class UsuarioForm {
 	@NotNull
-	private String userName;
+	private String usuario;
 	@NotNull
 	private String password;
 	
@@ -16,16 +16,16 @@ public class UsuarioForm {
 	@NotNull
 	private int codigopostal;
 
-	public String getUserName() {
-		return userName;
+	public String getUsuario() {
+		return usuario;
 	}
 
 	public String getPassword() {
 		return password;
 	}
 
-	public void setUserName(String name) {
-		this.userName = name;
+	public void setUsuario(String name) {
+		this.usuario = name;
 	}
 
 	public void setPassword(String password) {

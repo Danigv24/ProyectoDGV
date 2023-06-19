@@ -20,6 +20,11 @@ public class Escuderias {
 	}
 
 
+	public Escuderias() {
+		super();
+	}
+
+
 	public Integer getId() {
 		return Id;
 	}

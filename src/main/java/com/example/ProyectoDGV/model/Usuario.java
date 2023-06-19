@@ -23,7 +23,7 @@ public class Usuario {
 	@Column(unique = true)
 	private String usuario;
 	private String contrasenia;
-	private String dirección;
+	private String direccion;
 	private int CodigoPostal;
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rol_id")
@@ -35,12 +35,12 @@ public class Usuario {
 		this.usuario = usuario;
 		this.contrasenia = contrasenia;
 	}
-	public Usuario(String usuario, String contrasenia, String dirección, int codigoPostal) {
+	public Usuario(String usuario, String contrasenia, String direccion, int codigoPostal) {
 		super();
 		this.usuario = usuario;
 		this.contrasenia = contrasenia;
-		this.dirección = dirección;
-		CodigoPostal = codigoPostal;
+		this.direccion = direccion;
+		this.CodigoPostal = codigoPostal;
 	}
 	public Usuario() {
 		
@@ -54,8 +54,8 @@ public class Usuario {
 	public String getContrasenia() {
 		return contrasenia;
 	}
-	public String getDirección() {
-		return dirección;
+	public String getDireccion() {
+		return direccion;
 	}
 	public int getCodigoPostal() {
 		return CodigoPostal;
@@ -75,10 +75,10 @@ public class Usuario {
 	public void setContrasenia(String contrasenia) {
 		this.contrasenia = contrasenia;
 	}
-	public void setDirección(String dirección) {
-		this.dirección = dirección;
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
 	}
-	public void setC0digoPostal(int codigoPostal) {
+	public void setCodigoPostal(int codigoPostal) {
 		CodigoPostal = codigoPostal;
 	}
 	public void setRol(Rol rol) {

@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +23,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.ProyectoDGV.form.LoginForm;
 import com.example.ProyectoDGV.form.PedidosForm;
 import com.example.ProyectoDGV.form.UsuarioForm;
+import com.example.ProyectoDGV.model.Escuderias;
 import com.example.ProyectoDGV.model.Pedidos;
+import com.example.ProyectoDGV.model.Pilotos;
 import com.example.ProyectoDGV.model.Productos;
 import com.example.ProyectoDGV.model.Usuario;
 import com.example.ProyectoDGV.model.cesta;
+import com.example.ProyectoDGV.repos.Escuderiasrepositorio;
 import com.example.ProyectoDGV.repos.Loginrepositorio;
 import com.example.ProyectoDGV.repos.Pedidosrepositorio;
+import com.example.ProyectoDGV.repos.Pilotosrepositorio;
 import com.example.ProyectoDGV.repos.ProductosRepositorio;
 import com.example.ProyectoDGV.repos.Usuariorepositorio;
 
@@ -57,14 +62,29 @@ public class ProyectoControlador {
 	private Pedidosrepositorio pedidoRepositorio;
 	@Autowired
 	private Usuariorepositorio usuarioRepositorio;
+	@Autowired
+	private Pilotosrepositorio pilotosRepositorio;
+	@Autowired
+	private Escuderiasrepositorio escuderiasRepositorio;
 	
 	@GetMapping("/index")
 	public String iniPag() {
 		return "index";
 	}
+	@GetMapping("/error")
+	public String handleError() {
+		return "error";
+	}
+	
+	@GetMapping("/Circuitos")
+	public String getCircuitos() {
+		return "Circuitos";
+	}
 	@GetMapping(path="/Ferrari")
-	public String getArticulos(Model modelo) {
+	public String getArticulos(Model modelo,HttpServletRequest request) {
 		Iterable<Productos> itarticulos = productosRepositorio.findByEscuderia("Ferrari");
+		String lastPage = request.getRequestURI();
+	    modelo.addAttribute("lastPage", lastPage);
 	    List<Productos> articulos = new ArrayList<Productos>();
 		itarticulos.forEach(articulos::add);
 	    modelo.addAttribute("listaProductos", articulos);
@@ -146,34 +166,49 @@ public class ProyectoControlador {
 	
 	
 	@GetMapping("/cesta")
-	public String mostrarCesta(Model model,HttpServletRequest request) {
+	public String mostrarCesta(Model model,HttpServletRequest request,UsuarioForm usuarioForm) {
 		HttpSession session= request.getSession();
 	    List<Productos> cesta = Cesta.getProducts();
+	    Integer clienteId = (Integer) session.getAttribute("id");
+    	
+    	if(clienteId != null) {
+    		Usuario usuario = usuarioRepositorio.findById(clienteId).orElse(null);
+    		model.addAttribute("usuario",usuario);
+    	}
 	    model.addAttribute("cesta", cesta);
-	   model.addAttribute("precio",Cesta.getTotalPrice());
-
-	    return "cesta";
+	    model.addAttribute("precio",Cesta.getTotalPrice());
+	    
+	    return "Cesta";
 	}
 	
     @PostMapping("/cesta/add")
-    public String addToCart(@RequestParam int productId) {
+    public String addToCart(@RequestParam int productId,HttpServletRequest request) {
+    	HttpSession session= request.getSession();
     	Cesta.addProduct(productId);
-        return "redirect:/cesta";
+    	int carrito = Cesta.getProducts().size();
+	    session.setAttribute("carrito", carrito);
+    	String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+        
     }
 
     @PostMapping("/cesta/remove")
-    public String removeFromCart(@RequestParam int productId) {
+    public String removeFromCart(@RequestParam int productId,HttpServletRequest request) {
     	Cesta.removeProduct(productId);
-        return "redirect:/cesta";
+    	HttpSession session= request.getSession();
+    	int carrito = Cesta.getProducts().size();
+	    session.setAttribute("carrito", carrito);
+        return "redirect:/Cesta";
     }
     @PostMapping("/cesta/clear")
     public String clearFromCart() {
     	Cesta.clearProducts();
-        return "redirect:/cesta";
+        return "redirect:/Cesta";
     }
+   
     @GetMapping(path="/login")
 	public String login(LoginForm loginForm) {
-		return "/login";
+		return "Login";
 	}
 	@PostMapping(path="/login")
 	public String checkLoginInfo(@ModelAttribute("loginForm") LoginForm loginForm,BindingResult bindingResult, HttpServletRequest request){
@@ -184,17 +219,42 @@ public class ProyectoControlador {
             session.setAttribute("usuario", "Welcome "+loginForm.getUserName());
             session.setAttribute("userName", loginForm.getUserName());
             session.setAttribute("rol", login.getRol().getId());
+            session.setAttribute("id", login.getId());
             return "index";
         } else {
         	session.setAttribute("error", "usuario/password incorrectos");
-            return "/login";
+            return "Login";
         }
 	
 	}
+	 @PostMapping("/actualizarPerfil")
+		public String actualizarPerfil(@ModelAttribute("usuario") @Valid UsuarioForm signupForm, BindingResult bindingResult, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+			HttpSession session = request.getSession();
+			if(bindingResult.hasErrors()) {
+				System.out.println("Errores");
+				return "cesta";
+		    }
+			Integer clienteId = (Integer) session.getAttribute("id");
+			if(clienteId != null) {
+	    		Usuario usuario = usuarioRepositorio.findById(clienteId).orElse(null);
+			
+			if (signupForm.getUsuario() != null && !signupForm.getUsuario().isEmpty()) {
+			    usuario.setUsuario(signupForm.getUsuario());
+			}
+			if (signupForm.getDireccion() != null && !signupForm.getDireccion().isEmpty()) {
+			    usuario.setDireccion(signupForm.getDireccion());
+			}
+			
+			usuarioRepositorio.save(usuario);
+	    	}
+			redirectAttributes.addFlashAttribute("mensaje", "Los cambios se guardaron correctamente.");
+			model.addAttribute("usuarioForm", new UsuarioForm());
+		    return "redirect:/Cesta";
+		}
 	@GetMapping(path="/logout")
 	public String logout(HttpSession session) {
 	    session.invalidate();
-		return "/index";
+		return "index";
 	}
 	@PostMapping(path="/altapedido")
 	public String checkPedidoInfo(@Valid PedidosForm pedidoForm, BindingResult bindingResult, Model modelo,HttpServletRequest request) {
@@ -234,6 +294,44 @@ public class ProyectoControlador {
 		modelo.addAttribute("loginForm",new LoginForm());
 		return "index";
 	}
+	@GetMapping(path="/listadoUsuarios")
+	public String getListUsuario(Model modelo,HttpServletRequest request) {
+		HttpSession session= request.getSession();
+		
+		Iterable<Usuario> itUsuario = usuarioRepositorio.findAll();
+		List<Usuario> listaUsuario = new ArrayList<Usuario>();
+		itUsuario.forEach(listaUsuario::add);
+		modelo.addAttribute("listaUsuario", listaUsuario);
+		return "listadoUsuarios";
+				
+	}
+	@GetMapping(path="/listadoPilotos")
+	public String getListPilotos(Model modelo,HttpServletRequest request) {
+		HttpSession session= request.getSession();
+		
+		Iterable<Pilotos> itPilotos = pilotosRepositorio.findAll();
+		List<Pilotos> listaPilotos = new ArrayList<Pilotos>();
+		itPilotos.forEach(listaPilotos::add);
+		// Ordenar la lista de pilotos de mayor a menor según los puntos
+		Collections.sort(listaPilotos, Comparator.comparingInt(Pilotos::getPuntos).reversed());
+		modelo.addAttribute("listaPilotos", listaPilotos);
+		
+		return "listadoPilotos";
+				
+	}
+	@GetMapping(path="/listadoEscuderias")
+	public String getListEscuderias(Model modelo,HttpServletRequest request) {
+		HttpSession session= request.getSession();
+		
+		Iterable<Escuderias> itEscuderia = escuderiasRepositorio.findAll();
+		List<Escuderias> listaEscuderia = new ArrayList<Escuderias>();
+		itEscuderia.forEach(listaEscuderia::add);
+		// Ordenar la lista de pilotos de mayor a menor según los puntos
+		Collections.sort(listaEscuderia, Comparator.comparingInt(Escuderias::getPuntos).reversed());
+		modelo.addAttribute("listaEscuderias", listaEscuderia);
+		return "listadoEscuderias";
+				
+	}
 	 @GetMapping(path="/altastock")
 		public String altastock() {
 			return "altastock";
@@ -242,8 +340,8 @@ public class ProyectoControlador {
     public String guardarProducto(@RequestParam("nombreArticulo") String nombreArticulo,
                                    @RequestParam("escuderia") String escuderia,
                                    @RequestParam("precio") int precio,
-                                   @RequestParam("imagen") MultipartFile imagen) throws IOException {
-        Productos producto = new Productos(nombreArticulo, escuderia, precio, imagen.getBytes());
+                                   @RequestParam("imagen") String imagen) throws IOException {
+        Productos producto = new Productos(nombreArticulo, escuderia, precio, imagen);
         productosRepositorio.save(producto);
         
         return "altastock";
@@ -254,19 +352,27 @@ public class ProyectoControlador {
 	}
 	
 	@PostMapping(path="/alta")
-	public String checkPersonInfo(@Valid UsuarioForm usuForm, BindingResult bindingResult, Model modelo) {
+	public String checkPersonInfo(@Valid UsuarioForm usuForm, BindingResult bindingResult, Model modelo,HttpServletRequest request) {
+		HttpSession session= request.getSession();
 		if(bindingResult.hasErrors()) {
-			return "/alta";
+			return "alta";
 		}
-		Usuario usuNuevo= new Usuario(usuForm.getUserName(),usuForm.getPassword(),usuForm.getDireccion(),usuForm.getCodigopostal());
+		 // Verificar si el usuario ya existe en la base de datos
+	    Usuario usuarioExistente = usuarioRepositorio.findByUsuario(usuForm.getUsuario());
+	    if (usuarioExistente != null) {
+	        // El usuario ya existe, manejar el caso correspondiente
+	        session.setAttribute("usuarioRepetido", "El usuario ya existe");
+	        return "alta";
+	    }
+		Usuario usuNuevo= new Usuario(usuForm.getUsuario(),usuForm.getPassword(),usuForm.getDireccion(),usuForm.getCodigopostal());
 		usuarioRepositorio.save(usuNuevo);
 		modelo.addAttribute("loginForm",new LoginForm());
-		return "/login";
+		return "Login";
 	}
 	
 	@GetMapping ("/carga")
 	public String iniPg() {
-		return "/carga";
+		return "carga";
 	}
 	
 	@PostMapping("/carga")
@@ -323,6 +429,59 @@ public class ProyectoControlador {
 		itPedidos.forEach(listaPedidos::add);
 		modelo.addAttribute("listaPedidos", listaPedidos);
 		return "listadopedidos";
+	}
+	@PostMapping("/modificarPR")
+	public String modificarProducto(@RequestParam int id, @RequestParam int importe,Model modelo,HttpServletRequest request) {
+	    Productos producto = productosRepositorio.findById(id);
+	    if (producto != null) {
+	    	producto.setPrecio(importe);
+	    	productosRepositorio.save(producto);
+	    }
+	    String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+	}
+	@PostMapping("/modificarPilotos")
+	public String modificarPilots(@RequestParam int id, @RequestParam int puntos,Model modelo,HttpServletRequest request) {
+	    Pilotos piloto = pilotosRepositorio.findById(id);
+	    if (piloto != null) {
+	    	piloto.setPuntos(puntos);
+	    	pilotosRepositorio.save(piloto);
+	    }
+	    String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+	}
+	@PostMapping("/modificarEscuderias")
+	public String modificarEscuderias(@RequestParam int id, @RequestParam int puntos,Model modelo,HttpServletRequest request) {
+	    Escuderias escuderia = escuderiasRepositorio.findById(id);
+	    if (escuderia != null) {
+	    	escuderia.setPuntos(puntos);
+	    	escuderiasRepositorio.save(escuderia);
+	    }
+	    String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+	}
+	@PostMapping("/eliminarPR")
+	public String eliminarProducto(@RequestParam int id,Model modelo,HttpServletRequest request) {
+	    
+		productosRepositorio.deleteById(id);
+		String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+	}
+	@PostMapping("/eliminarUsuario")
+	public String eliminarUsuario(@RequestParam int id,HttpServletRequest request) {
+	    Usuario usuario = usuarioRepositorio.findById(id);
+	    if (usuario != null) {
+	        List<Pedidos> pedidos = usuario.getListaPedidos();
+	        if (!pedidos.isEmpty()) {
+	            // Elimina los pedidos asociados al usuario
+	            pedidoRepositorio.deleteAll(pedidos);
+	        }
+	        // Elimina al usuario
+	        usuarioRepositorio.delete(usuario);
+	    }
+	    String lastPage = request.getHeader("referer");
+		return "redirect:"+ lastPage;
+	     
 	}
 
 }

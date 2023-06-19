@@ -13,7 +13,12 @@
   src: url("/fonts/MYRIADPRO-BOLDIT.woff") format("woff");
 }
 
-
+h1 {
+        text-align: center;
+        color: dark;
+        font-family: Calibri, sans-serif;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
 .container {
   display: flex;
 }
@@ -74,7 +79,7 @@
 }
 .card .price {
   text-align: right;
-  margin-top: -24px;
+  margin-top: -30px;
 }
 .card .price :is(h6, h4) {
   font-family: "Myriad Bold";
@@ -91,22 +96,23 @@
   margin-top: -4px;
 }
 .card.card-yellow .price h4 {
-  background: linear-gradient(170deg, #d97904, #f2b705);
+  background: #000000 ;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 .card.card-blue .price h4 {
-  background: linear-gradient(170deg, #235b8c, #03a696);
+  background: #000000 ;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin-top: 0px;
 }
 .card.card-red .price h4 {
-  background: linear-gradient(170deg, #d9042b, #f13a5c);
+  background: #000000 ;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 .card.card-green .price h4 {
-  background: #256e17;
+  background: #000000 ;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

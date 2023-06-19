@@ -12,6 +12,8 @@ public interface Usuariorepositorio extends CrudRepository<Usuario, Integer>{
 	
 	List<Usuario> findAll();
 	
+	Usuario findById(int paraId);
+	
 	Usuario findByUsuario(String paraUsu);
 
 }
