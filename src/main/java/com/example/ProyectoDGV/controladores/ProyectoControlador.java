@@ -348,7 +348,7 @@ public class ProyectoControlador {
     }
 	@GetMapping(path="/alta")
 	public String showForm(UsuarioForm personForm) {
-		return "/alta";
+		return "alta";
 	}
 	
 	@PostMapping(path="/alta")
